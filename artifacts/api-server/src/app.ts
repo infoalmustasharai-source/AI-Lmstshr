@@ -1,6 +1,5 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import pinoHttp from 'pino-http';
 import { logger } from './lib/logger.js';
 
 const app = express();
@@ -8,7 +7,12 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(pinoHttp({ logger }));
+
+// Simple logging middleware
+app.use((req: Request, res: Response, next) => {
+  logger.info(`${req.method} ${req.url}`);
+  next();
+});
 
 // Routes
 app.get('/api/health', (req: Request, res: Response) => {
