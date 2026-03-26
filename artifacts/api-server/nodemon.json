@@ -1,0 +1,12 @@
+{
+  "watch": ["src"],
+  "ext": "ts,tsx,js,json",
+  "ignore": ["**/dist/**", "**/node_modules/**", "**/.git/**"],
+  "exec": "pnpm run build && pnpm run start",
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "delay": 1000,
+  "verbose": true,
+  "legacyWatch": true
+}

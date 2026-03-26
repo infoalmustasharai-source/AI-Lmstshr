@@ -1,0 +1,11 @@
+{
+  "builds": [
+    {
+      "src": "artifacts/api-server/**",
+      "use": "@vercel/node"
+    }
+  ],
+  "buildCommand": "cd ../.. && npm install && cd artifacts/api-server && npm run build",
+  "outputDirectory": "artifacts/api-server/dist",
+  "installCommand": "cd ../.. && npm install"
+}
