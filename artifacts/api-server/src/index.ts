@@ -1,19 +1,34 @@
-import 'dotenv/config';
-import app from './app.js';
-import { logger } from './lib/logger.js';
+import express from 'express';
 
+const app = express();
 const port = process.env.PORT || 3000;
 
-async function start() {
-  try {
-    app.listen(port, () => {
-      logger.info(`✅ Server running on http://localhost:${port}`);
-      logger.info(`📡 API endpoint: http://localhost:${port}/api`);
-    });
-  } catch (error) {
-    logger.error('Failed to start server:', error);
-    process.exit(1);
-  }
-}
+app.use(express.json());
 
-start();
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Server is running' });
+});
+
+app.post('/api/login', (req, res) => {
+  const { email, password } = req.body;
+  res.json({ 
+    success: true, 
+    message: 'Login successful',
+    token: 'fake-jwt-token',
+    user: { email, name: 'User' }
+  });
+});
+
+app.post('/api/register', (req, res) => {
+  const { email, password, name } = req.body;
+  res.json({ 
+    success: true, 
+    message: 'Registration successful',
+    token: 'fake-jwt-token',
+    user: { email, name }
+  });
+});
+
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
