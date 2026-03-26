@@ -53,3 +53,5 @@ artifacts/*/.env
 pnpm-lock.yaml
 pnpm-lock.yaml
 **/pnpm-lock.yaml
+pnpm-lock.yaml
+**/pnpm-lock.yaml
