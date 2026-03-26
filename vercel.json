@@ -5,7 +5,7 @@
       "use": "@vercel/node"
     }
   ],
-  "buildCommand": "cd ../.. && npm install && cd artifacts/api-server && npm run build",
-  "outputDirectory": "artifacts/api-server/dist",
-  "installCommand": "cd ../.. && npm install"
+  "installCommand": "pnpm install",
+  "buildCommand": "cd artifacts/api-server && pnpm run build",
+  "outputDirectory": "artifacts/api-server/dist"
 }
