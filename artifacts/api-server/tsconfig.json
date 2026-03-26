@@ -4,18 +4,8 @@
     "outDir": "dist",
     "rootDir": "src",
     "types": ["node"],
-    "noImplicitReturns": false
+    "moduleResolution": "node16",
+    "module": "Node16"
   },
-  "include": ["src"],
-  "references": [
-    {
-      "path": "../../lib/db"
-    },
-    {
-      "path": "../../lib/api-zod"
-    },
-    {
-      "path": "../../lib/integrations-openai-ai-server"
-    }
-  ]
+  "include": ["src/index.ts", "src/app.ts", "src/lib/**/*"]
 }
