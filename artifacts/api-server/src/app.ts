@@ -1,26 +1,20 @@
-import express, { Request, Response, NextFunction } from 'express';
-import cors from 'cors';
+import express from 'express';
 
 const app = express();
 
-// Middleware
-app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Simple logging middleware
-app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`${req.method} ${req.url}`);
-  next();
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Server is running' });
 });
 
-import apiRouter from './routes/index.js';
+app.post('/api/login', (req, res) => {
+  res.json({ message: 'Login endpoint working', email: req.body.email });
+});
 
-// Routes
-app.use('/api', apiRouter);
-
-// Health check fallback
-app.get('/', (req: Request, res: Response) => {
-  res.json({ status: 'ok', message: 'Mustashar API is running' });
+app.post('/api/register', (req, res) => {
+  res.json({ message: 'Register endpoint working', email: req.body.email });
 });
 
 export default app;
