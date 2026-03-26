@@ -1,73 +1,83 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import pkg from "pg";
-import * as schema from "@workspace/db/schema";
-import { users } from "@workspace/db/schema";
+import fs from "fs";
+import path from "path";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import { eq } from "drizzle-orm";
+import Database from "better-sqlite3";
+import * as schema from "../schema/index.js";
+import { users } from "../schema/users.js";
 import { hashPassword } from "./auth.js";
 
-const { Pool } = pkg;
+const databaseFile = process.env.DATABASE_URL?.startsWith("file:")
+  ? process.env.DATABASE_URL.replace("file:", "")
+  : process.env.DATABASE_URL || "./dev.db";
 
-// Create connection pool
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl:
-    process.env.NODE_ENV === "production"
-      ? { rejectUnauthorized: false }
-      : false,
-});
-
-// Create Drizzle instance
-export const db = drizzle(pool, { schema });
-
-// Handle pool errors
-pool.on("error", (err) => {
-  console.error("Unexpected error on idle client", err);
-});
+const dbConnection = new Database(databaseFile, { verbose: console.log });
+export const db = drizzle(dbConnection, { schema });
 
 export async function initializeDatabase() {
   try {
-    const client = await pool.connect();
-    await client.query("SELECT NOW()");
+    const sqlPath = path.resolve(new URL(import.meta.url).pathname, "../../init-db.sql");
+    if (fs.existsSync(sqlPath)) {
+      const schemaSql = fs.readFileSync(sqlPath, "utf8");
+      dbConnection.exec(schemaSql);
+    }
 
-    // Create default owner/admin account when none exists
-    const ownerEmail = process.env.ADMIN_EMAIL || "owner@mustashar.ai";
-    const existingOwner = await client.query(
-      "SELECT id FROM users WHERE is_owner = true LIMIT 1"
-    );
+    const ownerEmail = process.env.ADMIN_EMAIL || "bishoysamy390@gmail.com";
+    const ownerPassword = process.env.ADMIN_PASSWORD || "Bishoysamy2020";
 
-    if (existingOwner.rows.length === 0) {
-      const existingAdmin = await client.query(
-        "SELECT id FROM users WHERE email = $1 LIMIT 1",
-        [ownerEmail]
-      );
+    const existingOwner = await db
+      .select()
+      .from(users)
+      .where(eq(users.isOwner, true))
+      .limit(1);
 
-      if (existingAdmin.rows.length === 0) {
-        const ownerPassword = process.env.ADMIN_PASSWORD || "Bishoysamy";
+    if (existingOwner.length === 0) {
+      const existingAdmin = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, ownerEmail))
+        .limit(1);
+
+      if (existingAdmin.length === 0) {
         const passwordHash = await hashPassword(ownerPassword);
 
-        await client.query(
-          "INSERT INTO users (name, email, password_hash, balance, is_admin, is_owner, must_change_password, is_active) VALUES ($1, $2, $3, $4, true, true, true, true)",
-          ["Owner", ownerEmail, passwordHash, 0]
-        );
+        await db.insert(users).values({
+          name: "Owner",
+          email: ownerEmail,
+          passwordHash,
+          balance: 999999,
+          plan: "pro",
+          isAdmin: true,
+          isOwner: true,
+          mustChangePassword: true,
+          isActive: true,
+        });
 
         console.log("✅ Default owner/admin user created with email", ownerEmail);
       } else {
-        await client.query(
-          "UPDATE users SET is_admin = true, is_owner = true, must_change_password = true WHERE id = $1",
-          [existingAdmin.rows[0].id]
-        );
+        await db
+          .update(users)
+          .set({ isAdmin: true, isOwner: true, mustChangePassword: true, isActive: true })
+          .where(eq(users.id, existingAdmin[0].id));
+
+        console.log("✅ Existing user promoted to owner/admin", ownerEmail);
       }
     }
 
-    client.release();
-    console.log("✅ Database connection established");
+    console.log("✅ Database initialization successful");
     return true;
   } catch (error) {
-    console.error("❌ Database connection failed:", error);
+    console.error("❌ Database initialization failed:", error);
     return false;
   }
 }
 
 export async function closeDatabase() {
-  await pool.end();
-  console.log("Database connection closed");
+  try {
+    dbConnection.close();
+    console.log("Database connection closed");
+  } catch (error) {
+    console.error("Error closing database:", error);
+  }
 }
+

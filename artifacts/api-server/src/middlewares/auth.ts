@@ -12,16 +12,18 @@ export interface AuthenticatedRequest extends Request {
 /**
  * Middleware to check if user is authenticated
  */
-export function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
   const token = extractTokenFromHeader(req.headers.authorization);
 
   if (!token) {
-    return res.status(401).json({ error: "Unauthorized: No token provided" });
+    res.status(401).json({ error: "Unauthorized: No token provided" });
+    return;
   }
 
   const user = verifyToken(token);
   if (!user) {
-    return res.status(401).json({ error: "Unauthorized: Invalid token" });
+    res.status(401).json({ error: "Unauthorized: Invalid token" });
+    return;
   }
 
   req.user = user;
@@ -31,9 +33,10 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
 /**
  * Middleware to check if user is admin
  */
-export function adminMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export function adminMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
   if (!req.user?.isAdmin) {
-    return res.status(403).json({ error: "Forbidden: Admin access required" });
+    res.status(403).json({ error: "Forbidden: Admin access required" });
+    return;
   }
   next();
 }

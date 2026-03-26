@@ -13,27 +13,14 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+import apiRouter from './routes/index.js';
+
 // Routes
-app.get('/api/health', (req: Request, res: Response) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+app.use('/api', apiRouter);
 
-app.post('/api/login', async (req: Request, res: Response) => {
-  try {
-    const { email, password } = req.body;
-    res.json({ message: 'Login endpoint', email });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-app.post('/api/register', async (req: Request, res: Response) => {
-  try {
-    const { email, password, name } = req.body;
-    res.json({ message: 'Register endpoint', email, name });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
+// Health check fallback
+app.get('/', (req: Request, res: Response) => {
+  res.json({ status: 'ok', message: 'Mustashar API is running' });
 });
 
 export default app;

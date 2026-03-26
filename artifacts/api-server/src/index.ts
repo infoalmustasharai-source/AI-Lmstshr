@@ -9,6 +9,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 import app from "./app.js";
+import { initializeDatabase } from "./lib/database.js";
 import { logger } from "./lib/logger.js";
 
 const rawPort = process.env.PORT;
@@ -26,13 +27,20 @@ if (Number.isNaN(port)) {
 async function start() {
     try {
         logger.info(`Server starting on port ${port}`);
+
+        const initialized = await initializeDatabase();
+        if (!initialized) {
+            logger.error('Database initialization failed, aborting startup');
+            process.exit(1);
+        }
+
         app.listen(port, () => {
             logger.info(`✅ Server is running on http://localhost:${port}`);
             logger.info(`📡 API endpoint: http://localhost:${port}/api`);
             logger.info(`🔑 OpenAI API Key: ${process.env.OPENAI_API_KEY ? '✅ Set' : '❌ Missing'}`);
         });
     } catch (error) {
-        logger.error("Failed to start server:", error);
+        logger.error({ err: error as Error | undefined }, "Failed to start server");
         process.exit(1);
     }
 }

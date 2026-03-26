@@ -2,7 +2,7 @@ import { Router } from "express";
 import crypto from "crypto";
 import { OAuth2Client } from "google-auth-library";
 import { db } from "../lib/database.js";
-import { users } from "@workspace/db/schema";
+import { users } from "../schema/users.js";
 import { hashPassword, generateToken, verifyPassword } from "../lib/auth.js";
 import { eq } from "drizzle-orm";
 import nodemailer from "nodemailer";

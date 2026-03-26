@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../lib/database.js";
-import { users, transactions } from "@workspace/db/schema";
+import { users, transactions } from "../schema/index.js";
 import { authMiddleware, adminMiddleware } from "../middlewares/auth.js";
 import { eq } from "drizzle-orm";
 
@@ -42,7 +42,7 @@ router.get("/users", async (req, res) => {
  */
 router.get("/users/:id", async (req, res) => {
   try {
-    const userId = parseInt(req.params.id);
+    const userId = parseInt(String(req.params.id), 10);
 
     const user = await db
       .select()
@@ -75,7 +75,7 @@ router.get("/users/:id", async (req, res) => {
  */
 router.post("/users/:id/credit", async (req, res) => {
   try {
-    const userId = parseInt(req.params.id);
+    const userId = parseInt(String(req.params.id), 10);
     const { amount, description } = req.body as {
       amount?: number;
       description?: string;
@@ -138,7 +138,7 @@ router.post("/users/:id/credit", async (req, res) => {
  */
 router.post("/users/:id/debit", async (req, res) => {
   try {
-    const userId = parseInt(req.params.id);
+    const userId = parseInt(String(req.params.id), 10);
     const { amount, description } = req.body as {
       amount?: number;
       description?: string;
@@ -201,8 +201,8 @@ router.post("/users/:id/debit", async (req, res) => {
  */
 router.get("/transactions", async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit as string) || 50;
-    const offset = parseInt(req.query.offset as string) || 0;
+    const limit = parseInt(String(String(req.query.limit as string), 10), 10) || 50;
+    const offset = parseInt(String(String(req.query.offset as string), 10), 10) || 0;
 
     const allTransactions = await db
       .select()
@@ -223,7 +223,7 @@ router.get("/transactions", async (req, res) => {
  */
 router.post("/users/:id/toggle-active", async (req, res) => {
   try {
-    const userId = parseInt(req.params.id);
+    const userId = parseInt(String(req.params.id), 10);
 
     const user = await db
       .select()

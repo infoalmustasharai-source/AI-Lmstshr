@@ -4,7 +4,7 @@ import {
   conversations,
   messages,
   PERSONA_TYPES,
-} from "@workspace/db/schema";
+} from "../schema/index.js";
 import { authMiddleware, adminMiddleware } from "../middlewares/auth.js";
 import { eq, and } from "drizzle-orm";
 
@@ -75,7 +75,7 @@ router.get("/", authMiddleware, async (req, res) => {
 router.get("/:id", authMiddleware, async (req, res) => {
   try {
     const userId = (req as any).user?.userId;
-    const conversationId = parseInt(req.params.id);
+    const conversationId = parseInt(String(req.params.id), 10);
 
     const conv = await db
       .select()
@@ -114,7 +114,7 @@ router.get("/:id", authMiddleware, async (req, res) => {
 router.delete("/:id", authMiddleware, async (req, res) => {
   try {
     const userId = (req as any).user?.userId;
-    const conversationId = parseInt(req.params.id);
+    const conversationId = parseInt(String(req.params.id), 10);
 
     const conv = await db
       .select()

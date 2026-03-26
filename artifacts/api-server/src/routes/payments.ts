@@ -1,7 +1,7 @@
 import { Router } from "express";
 import crypto from "crypto";
 import { db } from "../lib/database.js";
-import { users, transactions } from "@workspace/db/schema";
+import { users, transactions } from "../schema/index.js";
 import { authMiddleware, adminMiddleware } from "../middlewares/auth.js";
 import { eq } from "drizzle-orm";
 

@@ -5,7 +5,7 @@ import {
   conversations,
   users,
   transactions,
-} from "@workspace/db/schema";
+} from "../schema/index.js";
 import { authMiddleware } from "../middlewares/auth.js";
 import { getSystemPrompt } from "../lib/personas.js";
 import { eq, and } from "drizzle-orm";
@@ -173,7 +173,7 @@ router.post("/", authMiddleware, async (req, res) => {
 router.get("/:conversationId", authMiddleware, async (req, res) => {
   try {
     const userId = (req as any).user?.userId;
-    const conversationId = parseInt(req.params.conversationId);
+    const conversationId = parseInt(String(req.params.conversationId), 10);
 
     // Verify conversation belongs to user
     const conv = await db

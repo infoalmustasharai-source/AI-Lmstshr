@@ -1,11 +1,11 @@
-import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, sqliteTable, serial, text, timestamp } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { users } from "./users";
 
 export const PERSONA_TYPES = ["defense-lawyer", "legal-analyst", "judge-vision", "quick-consultation", "smart-mufti"] as const;
 
-export const conversations = pgTable("conversations", {
+export const conversations = sqliteTable("conversations", {
   id: serial("id").primaryKey(),
   userId: integer("user_id")
     .notNull()

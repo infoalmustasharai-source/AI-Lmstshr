@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { eq, gte, count, sql, desc } from "drizzle-orm";
-import { db } from "@workspace/db";
-import { conversations, messages, users, transactions } from "@workspace/db/schema";
+import { db } from "../lib/database.js";
+import { conversations, messages, users, transactions } from "../schema/index.js";
 import { AdminLoginBody } from "@workspace/api-zod";
 
 const router = Router();
@@ -14,14 +14,16 @@ if (!ADMIN_EMAIL || !ADMIN_PASSWORD || !ADMIN_TOKEN) {
   throw new Error("Missing required environment variables: ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_TOKEN");
 }
 
-function requireAdmin(req: any, res: any, next: any) {
+function requireAdmin(req: any, res: any, next: any): void {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Unauthorized" });
+    res.status(401).json({ error: "Unauthorized" });
+    return;
   }
   const token = authHeader.split(" ")[1];
   if (token !== ADMIN_TOKEN) {
-    return res.status(401).json({ error: "Invalid token" });
+    res.status(401).json({ error: "Invalid token" });
+    return;
   }
   next();
 }
@@ -95,7 +97,7 @@ router.get("/conversations", requireAdmin, async (req, res) => {
 
 router.get("/conversations/:id", requireAdmin, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const [conv] = await db.select().from(conversations).where(eq(conversations.id, id));
     if (!conv) return res.status(404).json({ error: "Not found" });
     const msgs = await db.select().from(messages).where(eq(messages.conversationId, id)).orderBy(messages.createdAt);
@@ -107,7 +109,7 @@ router.get("/conversations/:id", requireAdmin, async (req, res) => {
 
 router.delete("/conversations/:id", requireAdmin, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     await db.delete(messages).where(eq(messages.conversationId, id));
     await db.delete(conversations).where(eq(conversations.id, id));
     res.status(204).end();
@@ -158,7 +160,7 @@ router.post("/users", requireAdmin, async (req, res) => {
 
 router.put("/users/:id", requireAdmin, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const { name, phone, email, plan, isActive, notes } = req.body;
     const [user] = await db.update(users)
       .set({ name, phone, email, plan, isActive, notes, updatedAt: new Date() })
@@ -174,7 +176,7 @@ router.put("/users/:id", requireAdmin, async (req, res) => {
 
 router.delete("/users/:id", requireAdmin, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     await db.delete(users).where(eq(users.id, id));
     res.status(204).end();
   } catch {
@@ -185,19 +187,19 @@ router.delete("/users/:id", requireAdmin, async (req, res) => {
 // ─── Balance ─────────────────────────────────────────────
 router.post("/users/:id/balance", requireAdmin, async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const { amount, note } = req.body;
     if (!amount || isNaN(amount)) return res.status(400).json({ error: "المبلغ غير صالح" });
 
     const [user] = await db.select().from(users).where(eq(users.id, id));
     if (!user) return res.status(404).json({ error: "المستخدم غير موجود" });
 
-    const newBalance = user.balance + parseInt(amount);
+    const newBalance = user.balance + parseInt(String(amount), 10);
     const [updated] = await db.update(users).set({ balance: newBalance, updatedAt: new Date() }).where(eq(users.id, id)).returning();
 
     await db.insert(transactions).values({
       userId: id,
-      amount: parseInt(amount),
+      amount: parseInt(String(amount), 10),
       type: amount > 0 ? "deposit" : "debit",
       note: note || (amount > 0 ? "شحن رصيد" : "خصم رصيد"),
     });

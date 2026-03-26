@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { eq } from "drizzle-orm";
 import multer from "multer";
-import { db } from "@workspace/db";
-import { conversations, messages } from "@workspace/db/schema";
+import { db } from "../../lib/database.js";
+import { conversations, messages } from "../schema/index.js";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import {
   CreateOpenaiConversationBody,
@@ -33,7 +33,7 @@ router.post("/conversations", async (req, res) => {
 
 router.get("/conversations/:id", async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const [conv] = await db.select().from(conversations).where(eq(conversations.id, id));
     if (!conv) return res.status(404).json({ error: "Conversation not found" });
     const msgs = await db.select().from(messages).where(eq(messages.conversationId, id)).orderBy(messages.createdAt);
@@ -45,7 +45,7 @@ router.get("/conversations/:id", async (req, res) => {
 
 router.delete("/conversations/:id", async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const [conv] = await db.select().from(conversations).where(eq(conversations.id, id));
     if (!conv) return res.status(404).json({ error: "Conversation not found" });
     await db.delete(messages).where(eq(messages.conversationId, id));
@@ -58,7 +58,7 @@ router.delete("/conversations/:id", async (req, res) => {
 
 router.get("/conversations/:id/messages", async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const msgs = await db.select().from(messages).where(eq(messages.conversationId, id)).orderBy(messages.createdAt);
     res.json(msgs);
   } catch (err) {
@@ -68,7 +68,7 @@ router.get("/conversations/:id/messages", async (req, res) => {
 
 router.post("/conversations/:id/messages", upload.single("file"), async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(String(req.params.id), 10);
     const content = req.body.content || "";
     const file = req.file;
 
@@ -115,7 +115,7 @@ router.post("/conversations/:id/messages", upload.single("file"), async (req, re
 
     let fullResponse = "";
 
-    const chatMessages = history.slice(0, -1).map((m) => ({
+    const chatMessages = history.slice(0, -1).map((m: { role: string; content: string }) => ({
       role: m.role as "user" | "assistant" | "system",
       content: m.content,
     }));
