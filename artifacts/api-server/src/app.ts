@@ -1,6 +1,5 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import { logger } from './lib/logger.js';
 
 const app = express();
 
@@ -10,7 +9,7 @@ app.use(express.json());
 
 // Simple logging middleware
 app.use((req: Request, res: Response, next) => {
-  logger.info(`${req.method} ${req.url}`);
+  console.log(`${req.method} ${req.url}`);
   next();
 });
 
