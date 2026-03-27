@@ -1,14 +1,18 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Lock, Mail, ArrowRight, ShieldCheck } from "lucide-react";
+import { Lock, Mail, ArrowRight, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { loginUser, registerUser } from "@/lib/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isRegister, setIsRegister] = useState(false);
   const [_, setLocation] = useLocation();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -17,24 +21,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        setError(data.error || "فشل تسجيل الدخول");
-        setLoading(false);
-        return;
-      }
-
-      const data = await response.json();
+      const data = await loginUser(email, password);
       localStorage.setItem("token", data.token);
       setLocation("/chat");
     } catch (err: any) {
-      setError(err.message || "حدث خطأ");
+      setError(err.message || "فشل تسجيل الدخول");
+    } finally {
       setLoading(false);
     }
   };
@@ -45,25 +37,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const name = email.split("@")[0]; // Simple name generation
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        setError(data.error || "فشل التسجيل");
-        setLoading(false);
-        return;
-      }
-
-      const data = await response.json();
+      const data = await registerUser(name, email, password);
       localStorage.setItem("token", data.token);
       setLocation("/chat");
     } catch (err: any) {
-      setError(err.message || "حدث خطأ");
+      setError(err.message || "فشل التسجيل");
+    } finally {
       setLoading(false);
     }
   };
@@ -90,147 +69,161 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Login Form */}
-        <form onSubmit={handleLogin} className="space-y-4 mb-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-200 mb-2">
-              البريد الإلكتروني
-            </label>
-            <div className="relative">
-              <Mail className="absolute right-3 top-3 w-5 h-5 text-gray-400" />
+        {/* Forms */}
+        {!isRegister ? (
+          <form onSubmit={handleLogin} className="space-y-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-200 mb-2">
+                البريد الإلكتروني
+              </label>
+              <div className="relative">
+                <Mail className="absolute right-3 top-3 w-5 h-5 text-gray-400" />
+                <Input
+                  type="email"
+                  placeholder="example@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pr-10 bg-slate-800 border-slate-700 text-white placeholder:text-gray-400"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-200 mb-2">
+                كلمة المرور
+              </label>
+              <div className="relative">
+                <Lock className="absolute right-3 top-3 w-5 h-5 text-gray-400" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-3 text-gray-400 hover:text-gray-200"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pr-10 pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-gray-400"
+                  required
+                  minLength={6}
+                />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-2 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              {loading ? "جاري الدخول..." : "تسجيل الدخول"}
+              {!loading && <ArrowRight className="w-4 h-4" />}
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={handleRegister} className="space-y-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-200 mb-2">
+                الاسم الكامل
+              </label>
               <Input
-                type="email"
-                placeholder="example@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="pr-10 bg-slate-800 border-slate-700 text-white placeholder:text-gray-400"
+                type="text"
+                placeholder="اسمك هنا"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="bg-slate-800 border-slate-700 text-white placeholder:text-gray-400"
                 required
               />
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-200 mb-2">
-              كلمة المرور
-            </label>
-            <div className="relative">
-              <Lock className="absolute right-3 top-3 w-5 h-5 text-gray-400" />
-              <Input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pr-10 bg-slate-800 border-slate-700 text-white placeholder:text-gray-400"
-                required
-                minLength={6}
-              />
+            <div>
+              <label className="block text-sm font-medium text-gray-200 mb-2">
+                البريد الإلكتروني
+              </label>
+              <div className="relative">
+                <Mail className="absolute right-3 top-3 w-5 h-5 text-gray-400" />
+                <Input
+                  type="email"
+                  placeholder="example@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pr-10 bg-slate-800 border-slate-700 text-white placeholder:text-gray-400"
+                  required
+                />
+              </div>
             </div>
-          </div>
 
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-2 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
-          >
-            {loading ? "جاري الدخول..." : "تسجيل الدخول"}
-            {!loading && <ArrowRight className="w-4 h-4" />}
-          </Button>
-        </form>
+            <div>
+              <label className="block text-sm font-medium text-gray-200 mb-2">
+                كلمة المرور
+              </label>
+              <div className="relative">
+                <Lock className="absolute right-3 top-3 w-5 h-5 text-gray-400" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-3 text-gray-400 hover:text-gray-200"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pr-10 pl-10 bg-slate-800 border-slate-700 text-white placeholder:text-gray-400"
+                  required
+                  minLength={6}
+                />
+              </div>
+            </div>
 
-        {/* Additional actions */}
-        <div className="flex justify-between items-center mb-2">
-          <button
-            onClick={async () => {
-              const recoveryEmail = window.prompt("أدخل بريدك الإلكتروني لإعادة تعيين كلمة المرور:");
-              if (!recoveryEmail) return;
-              setError("");
-              setLoading(true);
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-2 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              {loading ? "جاري الإنشاء..." : "إنشاء حساب"}
+              {!loading && <ArrowRight className="w-4 h-4" />}
+            </Button>
+          </form>
+        )}
 
-              try {
-                const response = await fetch("/api/auth/forgot-password", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ email: recoveryEmail }),
-                });
-
-                const data = await response.json();
-                if (!response.ok) {
-                  setError(data.error || "فشل إرسال رابط الاستعادة");
-                } else {
-                  setError("");
-                  alert(data.message || "تم إرسال رابط استعادة كلمة المرور إذا كان الحساب موجودًا.");
-                }
-              } catch (err: any) {
-                setError(err.message || "حدث خطأ");
-              } finally {
-                setLoading(false);
-              }
-            }}
-            className="text-xs text-purple-300 hover:underline"
-          >
-            نسيت كلمة المرور؟
-          </button>
-
-          <button
-            onClick={async () => {
-              const idToken = window.prompt("الصق Google ID Token هنا:");
-              if (!idToken) return;
-              setError("");
-              setLoading(true);
-              try {
-                const response = await fetch("/api/auth/google", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ idToken }),
-                });
-                const data = await response.json();
-                if (!response.ok) {
-                  setError(data.error || "فشل تسجيل الدخول عبر جوجل");
-                } else {
-                  localStorage.setItem("token", data.token);
-                  setLocation("/chat");
-                }
-              } catch (err: any) {
-                setError(err.message || "حدث خطأ");
-              } finally {
-                setLoading(false);
-              }
-            }}
-            disabled={loading}
-            className="text-xs text-white bg-blue-600 px-3 py-1 rounded-lg hover:bg-blue-700"
-          >
-            تسجيل عبر Google
-          </button>
+        {/* Toggle between login and register */}
+        <div className="text-center">
+          <p className="text-sm text-gray-400">
+            {isRegister ? "لديك حساب بالفعل؟" : "ليس لديك حساب؟"}
+            <button
+              onClick={() => {
+                setIsRegister(!isRegister);
+                setError("");
+              }}
+              className="ml-2 text-purple-400 hover:text-purple-300 font-medium"
+            >
+              {isRegister ? "تسجيل الدخول" : "إنشاء حساب"}
+            </button>
+          </p>
         </div>
 
         {/* Divider */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="my-4 flex items-center gap-2">
           <div className="flex-1 h-px bg-slate-700" />
-          <span className="text-sm text-gray-400">أم</span>
+          <span className="text-xs text-gray-500">أو</span>
           <div className="flex-1 h-px bg-slate-700" />
         </div>
 
-        {/* Register */}
-        <div className="text-center">
-          <p className="text-gray-400 text-sm mb-3">ليس لديك حساب؟</p>
-          <Button
-            onClick={(e) => {
-              e.preventDefault();
-              handleRegister(e as any);
-            }}
-            disabled={loading}
-            variant="outline"
-            className="w-full border-slate-600 hover:bg-slate-800 text-white"
-          >
-            {loading ? "جاري الإنشاء..." : "إنشاء حساب جديد"}
-          </Button>
+        {/* Test Account Info */}
+        <div className="p-3 bg-slate-800/50 border border-slate-700 rounded-lg text-xs text-gray-400 text-center">
+          <p className="font-semibold text-purple-300 mb-1">حساب تجريبي:</p>
+          <p>البريد: bishoysamy390@gmail.com</p>
+          <p>كلمة المرور: Bishoysamy2020</p>
         </div>
-
-        {/* Footer */}
-        <p className="text-center text-xs text-gray-500 mt-6">
-          جميع الحقوق محفوظة © 2026
-        </p>
       </div>
     </div>
   );
 }
+
+
