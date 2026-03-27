@@ -1,6 +1,6 @@
 {
-  "buildCommand": "cd artifacts/al-mustashar && npm install && npm run build",
-  "installCommand": "npm install",
+  "buildCommand": "pnpm -r --filter al-mustashar run build",
+  "installCommand": "pnpm install --recursive",
   "outputDirectory": "artifacts/al-mustashar/dist",
   "framework": "vite"
 }
