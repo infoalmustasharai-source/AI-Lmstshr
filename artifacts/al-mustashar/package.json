@@ -9,7 +9,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@workspace/api-client-react": "file:../../lib/api-client-react",
     "@workspace/api-spec": "file:../../lib/api-spec",
     "@workspace/api-zod": "file:../../lib/api-zod",
     "@tanstack/react-query": "^5.95.2",
