@@ -1,0 +1,19 @@
+packages:
+  "framer-motion": "For smooth chat bubble animations and page transitions"
+  "lucide-react": "For beautiful UI icons"
+  "react-markdown": "To render AI responses with proper formatting"
+  "remark-gfm": "To support tables and github flavored markdown in chat"
+  "date-fns": "For elegant date formatting in the admin dashboard and chat history"
+  "clsx": "For conditional class merging"
+  "tailwind-merge": "To properly merge tailwind utility classes"
+
+images:
+  - path: "artifacts/al-mustashar/public/images/logo.png"
+    description: "A minimal, modern, sleek geometric logo mark for an AI consultant app. Deep royal blue and vibrant cyan colors on a transparent background. High-tech, professional SaaS aesthetic."
+    aspect_ratio: "1:1"
+
+notes:
+  - "Assuming React Query hooks are exported exactly as defined in the provided api.ts from @workspace/api-client-react"
+  - "Assuming the backend requires 'Authorization: Bearer <token>' for admin routes"
+  - "App is strictly RTL for Arabic support"
+  - "Using native fetch with ReadableStream for SSE streaming, bypassing React Query for the streaming endpoint"
