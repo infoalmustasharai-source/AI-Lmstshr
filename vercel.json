@@ -1,7 +1,0 @@
-{
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "outputDirectory": "dist",
-  "rootDirectory": "artifacts/al-mustashar",
-  "framework": "vite"
-}
